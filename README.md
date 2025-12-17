@@ -40,13 +40,18 @@ Instead of using random raycasts (which clump together) or heavy box-casts, the 
 float goldenRatio = (1 + Mathf.Sqrt(5)) / 2;
 float angleIncrement = Mathf.PI * 2 * goldenRatio;
 
-for (int i = 0; i < raysCount; i++) {
+for (int i = 0; i < raysCount; i++) 
+{
     float t = (float)i / raysCount;
     float inclination = Mathf.Acos(1 - 2 * t);
     float azimuth = angleIncrement * i;
+
+    // Convert spherical coordinates to Cartesian (x, y, z)
+    float x = Mathf.Sin(inclination) * Mathf.Cos(azimuth);
+    float y = Mathf.Sin(inclination) * Mathf.Sin(azimuth);
+    float z = Mathf.Cos(inclination);
     
-    // Converts spherical coordinates to Cartesian (x, y, z)
-    rayDirections[i] = new Vector3(Mathf.Sin(inclination) * Mathf.Cos(azimuth), ...);
+    rayDirections[i] = new Vector3(x, y, z);
 }
 ```
 ### 2. The "Voice": Volumetric Occlusion & Diffraction
