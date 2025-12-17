@@ -34,6 +34,17 @@ The system actively manages its own state to avoid redundant calculations:
 * **IsPlaying Check:** Emitters that are not playing audio (or are virtualized by FMOD) perform **zero** raycasts.
 * **Distance Culling:** Logic is fully suspended for sources beyond the listener's hearing range.
 
+```csharp
+// Snippet from FMODSmartReverb.cs & FMODSmartOcclusion.cs
+
+// 1. IsPlaying Check: If the sound isn't playing, don't scan.
+if (!isGlobal && targetEmitter != null && !targetEmitter.IsPlaying()) return;
+
+// 2. Distance Culling: If player is out of range, stop processing.
+float distance = Vector3.Distance(listener.position, transform.position);
+if (emitter.OverrideAttenuation && distance > emitter.OverrideMaxDistance) return;
+```
+
 ### 3. Asymmetric Ray Counts (LOD)
 * **The Listener (Global Reverb):** Uses a high-fidelity **Fibonacci Sphere (30+ rays)** to accurately map the room size and enclosure.
 * **Emitters (Occlusion):** Use a lightweight **Volumetric Cone (~6 rays)** just to determine line-of-sight and diffraction.
@@ -84,6 +95,18 @@ Standard Unity occlusion is binary (Blocked/Unblocked). This system uses `FMODSm
 * **Smart Corner Logic:** Prevents false occlusion when the player stands next to a wall but has a clear line of sight to the source.
 * **Diffraction Simulation:** Calculates how far "behind" an obstacle the listener is and applies a low-pass filter (LPF) curve accordingly.
 
+```csharp
+// Snippet from FMODSmartOcclusion.cs
+// Prevents self-occlusion when standing right next to a wall
+float distFromHitToTarget = targetDist - hit.distance;
+bool isNearField = (distFromHitToTarget < nearFieldThreshold) && (!centerIsBlocked);
+
+if (isNearField) {
+    // Ignore this hit (Treat as clear path)
+} else {
+    blockedCount++;
+}
+```
 ---
 
 ## Project Structure
