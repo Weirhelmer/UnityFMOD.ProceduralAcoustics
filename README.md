@@ -21,19 +21,37 @@ This system gives audio sources "eyes". It uses **Volumetric Raycasting** and **
 
 ---
 
-## Technical Deep Dive
+## ⚙️ Performance & Optimization Architecture
+One of the main challenges with volumetric audio is CPU cost. To ensure the system scales to hundreds of emitters without impacting FPS, I implemented a **three-layer optimization strategy**:
+
+### 1. Asynchronous Time Slicing (The "Sweet Spot")
+Instead of running heavy raycasts every frame, the scanner operates on a throttled tick rate (default: **5Hz** or every 0.2s).
+* **Why:** Room acoustics rarely change instantly. 5Hz provides a responsive feel while reducing CPU load by **~90%** compared to per-frame updates.
+* **Smoothing:** To hide the low tick rate, all FMOD parameters are interpolated using `Mathf.Lerp` and `Mathf.SmoothDamp`, ensuring the audio transitions feel instant and fluid to the player.
+
+### 2. State & Distance Culling (Sleep Mode)
+The system actively manages its own state to avoid redundant calculations:
+* **IsPlaying Check:** Emitters that are not playing audio (or are virtualized by FMOD) perform **zero** raycasts.
+* **Distance Culling:** Logic is fully suspended for sources beyond the listener's hearing range.
+
+### 3. Asymmetric Ray Counts (LOD)
+* **The Listener (Global Reverb):** Uses a high-fidelity **Fibonacci Sphere (30+ rays)** to accurately map the room size and enclosure.
+* **Emitters (Occlusion):** Use a lightweight **Volumetric Cone (~6 rays)** just to determine line-of-sight and diffraction.
+
+---
+
+## 📊 Technical Deep Dive
 
 ### 1. The "Ears": Fibonacci Sphere Sampling
 Instead of using random raycasts (which clump together) or heavy box-casts, the `FMODSmartReverb` component uses a **Fibonacci Lattice** algorithm. This generates mathematically perfect, equidistant points on a sphere.
 
 | Sphere Generation | Scanning Logic |
 | :---: | :---: |
-| ![Fibonacci](content/diagram4.jpg) | ![Scanning](content/diagram3.png) |
+| ![Fibonacci](content/diagram4.jpg) | ![Scanning](content/diagram3.jpg) |
 
 **Why this matters:**
 * **Uniformity:** We get a scientifically accurate "snapshot" of the environment density with as few as 30 rays.
-* **Performance:** Drastically cheaper than physics overlap checks.
-* **Math:** Uses the Golden Ratio ($\phi$) to distribute rays.
+* **Math:** Uses the Golden Ratio ($\phi$) to distribute rays evenly.
 
 ```csharp
 // Snippet from FMODSmartReverb.cs
