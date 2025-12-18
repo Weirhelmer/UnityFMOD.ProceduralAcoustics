@@ -131,12 +131,12 @@ The `FMODSmartReverb` component operates in two modes to solve the classic **"Em
 * **Settings:** Check `Is Global` ☑️.
 * **Function:** Drives **Global FMOD Parameters** affecting the entire mix (e.g., Master Reverb Bus). Scans the environment around the *Player*.
 
-**B. Local Mode (The "Hybrid" Approach)**
-* **Attach to:** A specific GameObject (e.g., a Radio inside a small booth).
+**B. Local Mode (The "Independent" Approach)**
+* **Attach to:** A specific GameObject (e.g., a Radio inside a booth or a machine in a Hangar).
 * **Settings:** Uncheck `Is Global` ⬜.
-* **Function:** Drives **Local Parameters** on that specific Event Instance.
-* **Why use this:** Allows a sound source to have "dry" acoustics if it's in a small room, even if the player is standing in a massive hall listening to it.
+* **Function:** The object scans the environment around itself and drives **Local Parameters on that specific Event Instance.**
 
+Why use this: Decouples the sound's acoustics from the player's location. For example, a machine running inside a massive hangar will sound reverberant, even if the player is standing outside in an open field.
 **Configuration:**
 * **Layers:** Set the `Environment Layer` to include walls/static geometry.
 * **Calibration:** Use the Animation Curves to tune how sensitive the system is to open spaces vs. tight corridors.
